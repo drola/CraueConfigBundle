@@ -2,6 +2,8 @@
 
 namespace Craue\ConfigBundle\Twig\Extension;
 
+use Craue\ConfigBundle\Util\Config;
+
 /**
  * @author Christian Raue <christian.raue@gmail.com>
  * @copyright 2011-2014 Christian Raue
@@ -12,14 +14,25 @@ class ConfigTemplateExtension extends \Twig_Extension {
 	/**
 	 * @var string[]
 	 */
-	protected $sectionOrder;
+	protected $sectionOrder = array();
 
 	/**
-	 * Sets the order in which sections will be rendered.
-	 * @param string[] $sectionOrder
+	 * @var Config $config
+	 */
+	protected $config;
+
+	/**
+	 * @param string[] $sectionOrder The order in which sections will be rendered.
 	 */
 	public function setSectionOrder(array $sectionOrder = array()) {
 		$this->sectionOrder = $sectionOrder;
+	}
+
+	/**
+	 * @param Config $config
+	 */
+	public function setConfig(Config $config) {
+		$this->config = $config;
 	}
 
 	/**
@@ -34,7 +47,16 @@ class ConfigTemplateExtension extends \Twig_Extension {
 	 */
 	public function getFilters() {
 		return array(
-			'craue_sortSections' => new \Twig_Filter_Method($this, 'sortSections'),
+			new \Twig_SimpleFilter('craue_sortSections', array($this, 'sortSections')),
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getFunctions() {
+		return array(
+			new \Twig_SimpleFunction('craue_setting', array($this, 'getSetting')),
 		);
 	}
 
@@ -63,6 +85,15 @@ class ConfigTemplateExtension extends \Twig_Extension {
 		}
 
 		return $finalSectionOrder;
+	}
+
+	/**
+	 * @param string $name Name of the setting.
+	 * @return string|null Value of the setting.
+	 * @throws \RuntimeException If the setting is not defined.
+	 */
+	public function getSetting($name) {
+		return $this->config->get($name);
 	}
 
 }
